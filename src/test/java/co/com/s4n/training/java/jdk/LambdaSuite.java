@@ -42,6 +42,18 @@ public class LambdaSuite {
     }
 
     @Test
+    public void usarUnaInterfaceFuncionalDuplicada(){
+
+        InterfaceDeEjemplo j = (x,y)->(2*x)+(2*y);
+
+        ClaseDeEjemplo instancia = new ClaseDeEjemplo();
+
+        int resultado = instancia.metodoDeEjemplo1(1,j);
+
+        assertTrue(resultado==7);
+    }
+
+    @Test
     public void usarUnaInterfaceFuncional2(){
 
         BiFunction<Integer, Integer, Integer> f = (x, y) -> new Integer(x.intValue()+y.intValue());
@@ -53,6 +65,18 @@ public class LambdaSuite {
         assertTrue(resultado==4);
     }
 
+    @Test
+    public void usarUnaInterfaceFuncional2Duplicada(){
+
+        BiFunction<Integer, Integer, Integer> f = (x, y) -> new Integer((2*x.intValue())/y.intValue());
+
+        ClaseDeEjemplo instancia = new ClaseDeEjemplo();
+
+        int resultado = instancia.metodoDeEjemplo2(1,f);
+
+        assertTrue(resultado==2);
+    }
+
     class ClaseDeEjemplo2{
 
         public int metodoDeEjemplo2(int x, int y, IntBinaryOperator fn){
@@ -61,6 +85,17 @@ public class LambdaSuite {
     }
     @Test
     public void usarUnaFuncionConTiposPrimitivos(){
+        IntBinaryOperator f = (x, y) -> x + y;
+
+        ClaseDeEjemplo2 instancia = new ClaseDeEjemplo2();
+
+        int resultado = instancia.metodoDeEjemplo2(1,2,f);
+
+        assertEquals(3,resultado);
+    }
+
+    @Test
+    public void usarUnaFuncionConTiposPrimitivosDuplicado(){
         IntBinaryOperator f = (x, y) -> x + y;
 
         ClaseDeEjemplo2 instancia = new ClaseDeEjemplo2();
@@ -115,6 +150,24 @@ public class LambdaSuite {
 
         instancia.operarConConsumer(c1);
 
+    }
+
+    class ClaseDeEjemplo5{
+
+        public void operarConConsumer2(Consumer<Integer> c, Integer i){
+            c.accept(i);
+        }
+    }
+
+    @Test
+    public void usarUnaFuncionConConsumer2(){
+        Consumer<Integer> c1 = x -> {
+            System.out.println("Me han entregado este valor: "+x);
+        };
+
+        ClaseDeEjemplo5 instancia = new ClaseDeEjemplo5();
+
+        instancia.operarConConsumer2(c1, 9);
 
     }
 
