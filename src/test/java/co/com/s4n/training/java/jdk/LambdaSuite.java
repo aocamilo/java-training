@@ -1,6 +1,8 @@
 package co.com.s4n.training.java.jdk;
 
 import static org.junit.Assert.*;
+
+import io.vavr.collection.List;
 import org.junit.Test;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -169,6 +171,32 @@ public class LambdaSuite {
 
         instancia.operarConConsumer2(c1, 9);
 
+    }
+
+    @FunctionalInterface
+    interface InterfaceDeEjercicio{
+        Consumer<Integer> suppliersAConsumer(Supplier<Integer> s1, Supplier<Integer> s2, Supplier<Integer> s3);
+    }
+
+    @Test
+    public void ejecutarOperaciones(){
+        InterfaceDeEjercicio i = (s1, s2, s3)->{
+            Consumer<Integer> c = n->{
+                Integer suma = s1.get() + s2.get() + s3.get() + n;
+                System.out.println("La Suma es: " + suma);
+            };
+            return c;
+        };
+
+        Supplier s1= ()-> 4;
+
+        Supplier s2= ()-> 5;
+
+        Supplier s3= ()-> 6;
+
+        Consumer<Integer> c = i.suppliersAConsumer(s1,s2,s3);
+
+        c.accept(new Integer(5));
     }
 
 }
