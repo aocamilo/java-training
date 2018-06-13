@@ -48,6 +48,16 @@ public class StreamsSuite {
     }
 
     @Test
+    public void testStreamsVacios(){
+        Optional<String> first = Arrays.asList()
+                .stream()
+                .findFirst();
+
+        assertEquals("NONE",first.orElseGet(()->"NONE"));
+
+    }
+
+    @Test
     public void testStreams3(){
         Optional<String> first = Stream.of("a1", "a2", "a3")
                 .findFirst();
