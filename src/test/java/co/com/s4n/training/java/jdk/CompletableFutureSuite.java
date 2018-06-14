@@ -8,6 +8,7 @@ import org.junit.Test;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.*;
+import java.util.regex.Pattern;
 
 public class CompletableFutureSuite {
 
@@ -206,7 +207,7 @@ public class CompletableFutureSuite {
     public void t8(){
 
         String testName = "t8";
-
+        // puede retornar cualquier valor diferente al primer futuro.
         CompletableFuture<String> completableFuture = CompletableFuture
                 .supplyAsync(() -> {
                     System.out.println(testName + " - future corriendo en el thread: " + Thread.currentThread().getName());
@@ -216,12 +217,66 @@ public class CompletableFutureSuite {
                     System.out.println(testName + " - compose corriendo en el thread: " + Thread.currentThread().getName());
                     return CompletableFuture.supplyAsync(() ->{
                         System.out.println(testName + " - CompletableFuture interno corriendo en el thread: " + Thread.currentThread().getName());
-                        return s + " World"  ;
+                        return s+" World" ;
                     } );
                 });
 
         try {
             assertEquals("Hello World", completableFuture.get());
+        }catch(Exception e){
+            assertTrue(false);
+        }
+    }
+
+    public class Persona{
+        String nombre;
+        int edad;
+
+        public Persona(String nombre, int edad){
+            this.nombre = nombre;
+            this.edad = edad;
+        }
+
+        public int getEdad() {
+            return edad;
+        }
+
+        public String getNombre(){
+            return nombre;
+        }
+    }
+
+    @Test
+    public void tPersona(){
+
+        String testName = "tPersona";
+        // puede retornar cualquier valor diferente al primer futuro.
+        CompletableFuture<Persona> completableFuture = CompletableFuture
+                .supplyAsync(() -> {
+                    System.out.println(testName + " - future corriendo en el thread: " + Thread.currentThread().getName());
+                    return "Camilo.22";
+                })
+                .thenCompose(s -> {
+                    return CompletableFuture.supplyAsync(() ->{
+                        String [] partir = s.split(Pattern.quote("."));
+                        System.out.println("componiendo una persona...." + partir[0]);
+                        String nombre = partir[0];
+                        int edad = Integer.parseInt(partir[1]);
+
+                        System.out.println(testName + " -> Nombre: " + nombre   );
+                        System.out.println(testName + " -> Edad: " + edad );
+
+                        Persona p = new Persona (nombre, edad);
+
+                        return p;
+                    } );
+                });
+
+        try {
+            Persona p = completableFuture.get();
+            System.out.println("Se ha creado una persona con el nombre: "+ p.getNombre() + " y su edad: " + p.getEdad());
+            assertTrue(p.getNombre().equals("Camilo"));
+            assertTrue(p.getEdad() == 22);
         }catch(Exception e){
             assertTrue(false);
         }
