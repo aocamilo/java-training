@@ -20,10 +20,73 @@ import java.util.Optional;
 
 import static io.vavr.API.Some;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class OptionSuite {
 
+
+    // como construir un option
+    @Test
+    public void testConstruction1(){
+        Option<Integer> o = Option(1);
+        assertTrue(o.isDefined());
+        assertEquals(o, Some(1));
+    }
+
+    @Test
+    public void testConstruction2(){
+        Option<Integer> o = Option(null);
+        System.out.println("None? "+ o );
+        assertEquals(o, Option.none());
+    }
+
+    private Boolean esParPossibleNull(int i){
+
+        return (i%2 == 0)? true:null;
+    }
+
+    @Test
+    public void testConstruccion3(){
+        Option<Boolean> b = Option(esParPossibleNull(1)); // option agrega el efecto de la no existencia.
+    }
+
+    private Integer identidadPosibleNull(int i){
+
+        return (i%2 == 0)? i:null;
+    }
+
+    @Test
+    public void testFilter(){
+        Option<Integer> b = Option(identidadPosibleNull(2));
+        Option<Integer> r = b.filter(x -> x.intValue() < 4 ); // con un filter le puedo quitar el valor a un Option si no cumple una cond.
+        assertEquals(r.getOrElse(666).intValue(), 2);
+    }
+
+    // es igual que en lista, opero con map
+
+    @Test
+    public void testFilterNone(){
+        Option<Integer> b = Option(identidadPosibleNull(1));
+        Option<Integer> r = b.filter(x -> x.intValue() < 4 ); // con un filter le puedo quitar el valor a un Option si no cumple una cond.
+        assertEquals(r, Option.none());
+    }
+
+    @Test
+    public void mapInOption(){
+        Option<Integer> o1 = Option(identidadPosibleNull(8));
+        Option<Integer> o2 = o1.map(x -> x - 8);
+
+        assertEquals(o2, Some(0));
+    }
+
+    @Test
+    public void mapInOptionNull(){
+        Option<Integer> o1 = Option(identidadPosibleNull(3));
+        Option<Integer> o2 = o1.map(x -> x-2);
+
+        assertEquals(o2, Option.none());
+    }
 
     /**
      * Un option se puede filtar, y mostrar un some() o un none si no encuentra el resultado
@@ -111,7 +174,7 @@ public class OptionSuite {
      */
     @Test
     public void testGetOrElse(){
-        Option<String> defined_option = Option.of("Hello!");
+        Option<String> defined_option = Option.of("Hello!"); // otro constructor de Option
         Option<String> none = None();
         assertEquals("failure - getOrElse did not get the current value of Option", "Hello!", defined_option.getOrElse("Goodbye!"));
         assertEquals("failure - getOrElse did not replace None", "Goodbye!", none.getOrElse("Goodbye!"));
@@ -222,5 +285,71 @@ public class OptionSuite {
         Option<Integer> integers = For(esPar(2), d ->
                                    For(esPar(4), c -> Option(d+c))).toOption();
         assertEquals(integers,Some(6));
+    }
+
+    /**
+     * FLATMAP PEGAMENTO!!!!!!!!!!!!!! se para en none() o la condición que dispare una excepción proyeccion que detiene
+    */
+    @Test
+    public void flatMapInOption(){
+        Option<Integer> o1 = Option.of(1);
+        Option<Option<Integer>> m = o1.map(i -> Option(i)); // paso mismo tipo retorno cualquier tipo
+        Option<Integer> m2 = o1.flatMap(i -> Option.of(identidadPosibleNull(i.intValue() - 3)) ); // doble map significa flatmap para evitar el efecto de doble capa
+
+
+    }
+
+    private Option<Integer> restar (int a, int b){
+        System.out.println("Restando "+a+" - " + b);
+        return (a-b>0) ? Option.of(a-b) : None();
+    }
+
+    private Option<Integer> sumar (int a, int b){
+        System.out.println("Sumando "+a+" + " + b);
+        return Option.of(a+b);
+    }
+
+    @Test
+    public void flatMapSuma(){
+        Option<Integer> resultado =
+                sumar(1,1).flatMap(r -> sumar(r, 1)
+                .flatMap(b -> sumar(b,1)
+                    .flatMap(c -> sumar(c, 1)
+                        .flatMap(d -> sumar(d,1))
+                    )
+                )
+        );
+
+        assertEquals(resultado.getOrElse(666).intValue(), 6 );
+
+    }
+
+    @Test
+    public void flatMapResta(){
+        Option<Integer> resultado =
+                sumar(1,1)
+                    .flatMap(r -> sumar(r, 1)
+                        .flatMap(b -> restar(b,4) // para aca por el efecto (encadenamiento monadico)
+                                .flatMap(c -> sumar(c, 1)
+                                        .flatMap(d -> sumar(d,1))
+                                )
+                        )
+                );
+
+        assertEquals(resultado.getOrElse(666).intValue(), 666 );
+
+    }
+
+    //  for comprehension
+
+    @Test
+    public void flatMapInOptionConFor(){
+        Option<Integer> res=
+        For(sumar(1,1), r1->
+        For(sumar(r1,1), r2->
+        For(sumar(r2, 1), r3 -> sumar(r3,1)))).toOption();
+
+        assertEquals(res.getOrElse(666).intValue(), 5);
+
     }
 }
