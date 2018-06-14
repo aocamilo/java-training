@@ -3,7 +3,11 @@ package co.com.s4n.training.java.vavr;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import io.vavr.collection.List;
+import io.vavr.control.Option;
 import org.junit.Test;
+
+import java.util.NoSuchElementException;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static io.vavr.collection.Iterator.empty;
@@ -14,6 +18,17 @@ import static org.junit.Assert.*;
  *  Getting started de la documentacion de vavr http://www.vavr.io/vavr-docs/#_collections
  *  Javadoc de vavr collections https://static.javadoc.io/io.vavr/vavr/0.9.0/io/vavr/collection/package-frame.html
  */
+
+/* Conjuntos datos y listas de datos
+*  Mapa -> Clave -> valor
+*  Lista -> conjuntos de datos enlazados uno tras otro
+*  Coleccion solo quiero escribir o leer! (operaciones de escritura)
+*  Complejidad espacial -> espacio fisico en memoria para hacer operación
+*  Complejidad algoritmica temporal -> con respecto al numero de elementos que tenga y el tiempo que se demore
+*                                       para realizar la operación.
+*
+*
+* */
 
 public class ListSuite {
 
@@ -29,25 +44,91 @@ public class ListSuite {
     /**
      * Lo que sucede cuando se crea una lista vacía y se llama un método
      */
+
+    // Así se crea una lista vacia!!!! >>
+    // tupla agrupación de un tipo de datos
+
     @Test
     public void testZipOnEmptyList() {
         List<String> list = List.of();
         assertTrue("Failure - List should be empty",list.isEmpty());
-        list.zip(empty());
+        List<Tuple2<String, Object>> zip = list.zip(empty());
+
+        System.out.println(zip.size());
+        assertEquals(zip.size(), 0);
+    }
+
+    //Zipper 1a1
+
+    @Test
+    public void testingZip(){
+        List<Integer> l1 = List.of(1,2,3);
+        List<Integer> l2 = List.of(1,2,3);
+        List<Tuple2<Integer, Integer>> zip = l1.zip(l2);
+        System.out.println("zip -> "+ zip);
+        assertEquals(zip.headOption().getOrElse(new Tuple2(0,0)), new Tuple2(1,1));
+    }
+
+    // Solo hace zip con la misma cantidad de datos, si una lista tiene mas datos que la otra, estos se descartan.
+
+    @Test
+    public void testingZipWithDiffSize(){
+        List<Integer> l1 = List.of(1,2,3,4);
+        List<Integer> l2 = List.of(1,2,3);
+        List<Tuple2<Integer, Integer>> zip = l1.zip(l2);
+        System.out.println("zip -> "+ zip);
+        assertEquals(zip.headOption().getOrElse(new Tuple2(0,0)), new Tuple2(1,1));
     }
 
     @Test
     public void testHead(){
         List<Integer> list1 = List.of(1,2,3);
-        Integer head = list1.head();
+        Integer head = list1.head(); // accesor al primer elemento -> convención estructura de datos func
         assertEquals(head, new Integer(1));
+    }
+
+    @Test
+    public void testHead2(){
+        List<Integer> list1 = List.of();
+        Integer head = list1.headOption().getOrElse(1); //equivalente a orElseGet
+
+        assertEquals(new Integer(1), head);
+    }
+
+    // No hay elementos, tira una excepción de NoSuchElementException, por esto es peligroso acceder a una lista con Head
+    // es mas seguro acceder con un HeadOption
+
+    @Test(expected = NoSuchElementException.class)
+    public void EmptyListTestHead(){
+        List<Integer> list1 = List.of();
+        Integer head = list1.head();
+        assertEquals(head, null);
+    }
+
+    // para comparar option null = Option.none, headOption devuelve un Option
+    @Test
+    public void EmptyListHeadOptionTest(){
+        List<Integer> list1 = List.of();
+        Option<Integer> head = list1.headOption();
+        assertEquals(head, Option.none());
+
     }
 
     @Test
     public void testTail(){
         List<Integer> list1 = List.of(1,2,3);
         List<Integer> expectedTail = List.of(2,3);
-        List<Integer> tail = list1.tail();
+        List<Integer> tail = list1.tail(); // Todos menos el primer elemento -> convención estructura datos func
+        assertEquals(tail, expectedTail);
+    }
+
+    // devuelve lista vacia si llamamos a Tail y tiene solo un elemento
+
+    @Test
+    public void OnlyElementTestTail(){
+        List<Integer> list1 = List.of(1);
+        List<Integer> expectedTail = List.of();
+        List<Integer> tail = list1.tail(); // Todos menos el primer elemento -> convención estructura datos func
         assertEquals(tail, expectedTail);
     }
 
@@ -71,7 +152,7 @@ public class ListSuite {
         assertNotSame(list1,list2);
     }
 
-    public String nameOfNumer(int i){
+    public String nameOfNumber(int i){
         switch(i){
             case 1: return "uno";
             case 2: return "dos";
@@ -84,7 +165,7 @@ public class ListSuite {
     public void testMap(){
 
         List<Integer> list1 = List.of(1, 2, 3);
-        List<String> list2 = list1.map(i -> nameOfNumer(i));
+        List<String> list2 = list1.map(i -> nameOfNumber(i));
 
         assertEquals(list2, List.of("uno", "dos", "tres"));
         assertEquals(list1, List.of(1,2,3));
@@ -97,13 +178,15 @@ public class ListSuite {
         List<Integer> list = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
         List<Integer> filteredList = list.filter(i -> i % 2 == 0);
         assertTrue(filteredList.get(0)==2);
-
     }
 
 
     /**
      * Se revisa el comportamiento cuando se pasa un iterador vacío
      */
+
+    // Como es vacia, no tiene pareja, por lo cual el resultado del zip es Empty
+
     @Test
     public void testZipWhenEmpty() {
         List<String> list = List.of("I", "Mario's", "Please", "me");
@@ -114,11 +197,14 @@ public class ListSuite {
     /**
      * Se revisa el comportamiento cuando se pasa el iterador de otra lista
      */
+
+    // Mismo caso con una mas grande que otro
+
     @Test
     public void testZipWhenNotEmpty() {
         List<String> list1 = List.of("I", "Mario's", "Please", "me", ":(");
         List<String> list2 = List.of("deleted", "test", "forgive", "!");
-        List<Tuple2<String, String>> zipped2 = list1.zip(list2.iterator());
+        List<Tuple2<String, String>> zipped2 = list1.zip(list2);
         List<Tuple2<String, String>> expected2 = List.of(Tuple.of("I", "deleted"), Tuple.of("Mario's", "test"),
                 Tuple.of("Please", "forgive"), Tuple.of("me", "!"));
         assertEquals("Failure - The list wasn't match correctly.",expected2,zipped2);
@@ -153,9 +239,47 @@ public class ListSuite {
         assertEquals("Failure it's a lie first in last out",
                 List.of("B", "A"), list.push("C").pop());
 
-        assertEquals("Failure don't return the correct tuple",
+        assertEquals("Failure doesn't return the correct tuple",
                 Tuple.of("B", List.of("A")), list.pop2());
     }
+
+    @Test(expected = NoSuchElementException.class)
+    public void popWithEmpty(){
+        List<Integer> l1 = List.of();
+        List<Integer> l2 = l1.pop();
+        assertEquals(l2, empty());
+    }
+
+    @Test
+    public void popWithEmpty2(){
+        List<Integer> l1 = List.of();
+        Option<List<Integer>> l2 = l1.popOption();
+        assertEquals(l2, Option.none());
+    }
+
+    @Test
+    public void popVsTail(){
+        List<Integer> l1 = List.of(1,2,3,4,5);
+        assertEquals(l1.pop(), l1.tail());
+        assertEquals(l1.popOption(), l1.tailOption()); // pop = tail
+    }
+
+    @Test
+    public void biggerPop2Test(){
+        List<Integer> l1 = List.of(1,2,3,4,5,6,7,8,9);
+        System.out.println("pop2 -> " + l1.pop2()); // pop2 nos da una tupla del elemento con el head y el tail.
+        Tuple2<Integer, List<Integer>> l2 = l1.pop2();
+        assertEquals(l2._1.intValue(), 1); // los elementos de una tupla se acceden con _y el primer elemento
+        assertEquals(l2._2, List.of(2,3,4,5,6,7,8,9));
+
+    }
+
+    @Test (expected = NoSuchElementException.class)
+    public void pop2OnEmptyList(){
+        List<Integer> l1 = List.of();
+        Tuple2<Integer, List<Integer>> r = l1.pop2();
+    }
+
 
     /**
      * Una lista de vavr se comporta como una pila ya que guarda y
@@ -172,7 +296,7 @@ public class ListSuite {
         list = list.push("d");
         list = list.push("e");
         assertEquals("The list did not behave as a stack", List.of("d", "c", "b", "a"), list.pop());
-        assertEquals("The list did not behave as a stack", "e", list.peek());
+        assertEquals("The list did not behave as a stack", "e", list.peek()); // peek is head as pop is tail *******
     }
 
     /**
@@ -195,8 +319,8 @@ public class ListSuite {
     public void testListToTakeWhile() {
         List<Integer> myList = List.ofAll(4, 6, 8, 5);
         List<Integer> myListOne = List.ofAll(2, 4, 3);
-        List<Integer> myListRes = myList.takeWhile(j -> j < 8);
-        List<Integer> myListResOne = myListOne.takeWhile(j -> j > 2);
+        List<Integer> myListRes = myList.takeWhile(j -> j < 8); // guarda en la lista hasta que encuentra un valor mayor a 8 (4,6)
+        List<Integer> myListResOne = myListOne.takeWhile(j -> j > 2); // guarda en la lista hasta que encuentra un valor mayor a 2 (vacio)
         assertTrue("List with values less than eight", myListRes.nonEmpty());
         assertEquals("List with length of two", 2, myListRes.length());
         assertEquals("List with last value six", new Integer(6), myListRes.last());
