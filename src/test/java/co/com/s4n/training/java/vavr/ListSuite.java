@@ -363,4 +363,29 @@ public class ListSuite {
                 List.of("window","!","Second"),
                 windows2.get(1));
     }
+
+    @Test
+    public void testFold(){
+        List<Integer> l1 = List.of(1,2,3,4,5);
+        Integer r = l1.fold(0, (acc, el) -> acc + el); // recibe el parametro 0 para indicar operacion bianaria
+        assertEquals(r.intValue(),15);                  // acc es el acomulador y el es numero actual
+    }
+
+    @Test
+    public void testFoldLeftAndRight(){
+        List<String> l1 = List.of("1","2","3","4","5");
+        String r = l1.foldLeft("", (acc, el) -> acc + el);
+        String r2 = l1.foldRight("", (el,acc)-> acc+el);
+
+        System.out.println("Left -> " + r);
+        System.out.println("Right -> " + r2);
+    }
+
+    /*
+    Lista vacia como un ciudadano de primer nivel
+    map me permite transformar cualquier elemento en lo que quiera
+    head y tail como accesores a la lista inseguros
+    headOption y tailOption accesores seguros a la lista
+    Fold, FoldRight, FoldLeft muy importantes
+     */
 }
