@@ -40,8 +40,8 @@ public class AverageCalculator {
         }
     }
 
-    public static Option<String> calcularPromedio (Option<String> s){
-        String []valor = s.get().split(";");
+    public static Option<String> calcularPromedio (String s){
+        String []valor = s.split(";");
         List<String> l = Arrays.asList(valor);
 
         System.out.println("********** Este es el valor de lo que ingresa -> "+ s);
@@ -61,8 +61,8 @@ public class AverageCalculator {
     }
 
 
-    public static Option<String> verificarSiPaso(Option<String> s){
-        return (Double.valueOf(s.getOrElse("0")) >= 3)? Option.of("Paso"): Option.of("No paso");
+    public static Option<String> verificarSiPaso(String s){
+        return (Double.valueOf(s) >= 3)? Option.of("Paso"): Option.of("No paso");
     }
 
 

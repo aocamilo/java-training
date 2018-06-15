@@ -362,9 +362,8 @@ public class OptionSuite {
         String ruta = "/home/s4n/Desktop/promedio.txt";
         Option<String> respuesta =
         For(AverageCalculator.leerArchivo(ruta), x1->
-        For(AverageCalculator.calcularPromedio(Option.of(x1)), x2->
-            AverageCalculator.verificarSiPaso(Option.of(x2))));
-
+        For(AverageCalculator.calcularPromedio(x1), x2->
+            AverageCalculator.verificarSiPaso(x2))).toOption();
 
         String salida = respuesta.getOrElse("666");
 
@@ -378,8 +377,8 @@ public class OptionSuite {
         String ruta = "/home/s4n/Desktop/promedio.txt";
         Option<String> respuesta =
         AverageCalculator.leerArchivo(ruta)
-                .flatMap(r1 -> AverageCalculator.calcularPromedio(Option.of(r1)))
-                .flatMap(r2 -> AverageCalculator.verificarSiPaso(Option.of(r2)));
+                .flatMap(r1 -> AverageCalculator.calcularPromedio(r1))
+                .flatMap(r2 -> AverageCalculator.verificarSiPaso(r2));
 
         String salida = respuesta.getOrElse("666");
 
@@ -387,6 +386,5 @@ public class OptionSuite {
 
         assertEquals("Paso", salida);
     }
-
 
 }
