@@ -23,6 +23,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import co.com.s4n.training.java.AverageCalculator;
+
 public class OptionSuite {
 
 
@@ -344,12 +346,47 @@ public class OptionSuite {
 
     @Test
     public void flatMapInOptionConFor(){
+
         Option<Integer> res=
         For(sumar(1,1), r1->
         For(sumar(r1,1), r2->
-        For(sumar(r2, 1), r3 -> sumar(r3,1)))).toOption();
+        For(sumar(r2, 1), r3 ->
+                sumar(r3,1)))).toOption();
 
         assertEquals(res.getOrElse(666).intValue(), 5);
 
     }
+
+    @Test
+    public void ejercicioConFor(){
+        String ruta = "/home/s4n/Desktop/promedio.txt";
+        Option<String> respuesta =
+        For(AverageCalculator.leerArchivo(ruta), x1->
+        For(AverageCalculator.calcularPromedio(Option.of(x1)), x2->
+            AverageCalculator.verificarSiPaso(Option.of(x2))));
+
+
+        String salida = respuesta.getOrElse("666");
+
+        System.out.println("******************* archivo leido: " + salida);
+
+        assertEquals("Paso", salida);
+    }
+
+    @Test
+    public void ejercicio(){
+        String ruta = "/home/s4n/Desktop/promedio.txt";
+        Option<String> respuesta =
+        AverageCalculator.leerArchivo(ruta)
+                .flatMap(r1 -> AverageCalculator.calcularPromedio(Option.of(r1)))
+                .flatMap(r2 -> AverageCalculator.verificarSiPaso(Option.of(r2)));
+
+        String salida = respuesta.getOrElse("666");
+
+        System.out.println("******************* archivo leido: " + salida);
+
+        assertEquals("Paso", salida);
+    }
+
+
 }
