@@ -1,5 +1,6 @@
 package co.com.s4n.training.java.vavr;
 
+import co.com.s4n.training.java.AverageCalculatorTry;
 import io.vavr.CheckedFunction1;
 import io.vavr.CheckedFunction2;
 import io.vavr.Function1;
@@ -8,6 +9,7 @@ import org.junit.Test;
 import static io.vavr.API.*;
 import static io.vavr.Predicates.*;
 import static io.vavr.Patterns.*;
+import static io.vavr.control.Try.success;
 import static junit.framework.TestCase.assertEquals;
 import io.vavr.PartialFunction;
 import java.util.ArrayList;
@@ -16,9 +18,15 @@ import java.util.stream.Stream;
 import java.util.List;
 import java.util.function.Consumer;
 import static io.vavr.control.Try.failure;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TrySuite {
+
+
+    /*
+    * Map / flatMap is as recover/recoverWith
+    * */
 
     /**
      *En este test se validara cuando un Try por medio de la ejecucion de una funcion
@@ -33,8 +41,12 @@ public class TrySuite {
                 Success(3),
                 myTrySuccess);
 
+        assertNotEquals(3, myTrySuccess); // no es el 3 es un success(3)
+
         assertTrue("failed - the values is a Failure",
                 myTryFailure.isFailure());
+
+
     }
 
     private String patternMyTry(Try<Integer> myTry) {
@@ -63,7 +75,7 @@ public class TrySuite {
 
     private Try<Integer> recoverMyTry(Integer a, Integer b) {
         return Try.of(() -> a / b).recover(x -> Match(x).of(
-                Case($(instanceOf(Exception.class)), -1)));
+                Case($(instanceOf(Exception.class)), -1))); // retorno -1 en caso de que se tenga un error Exception.class
     }
 
     /**
@@ -87,7 +99,7 @@ public class TrySuite {
 
 
     /**
-     * La funcionalidad AndThen usa el parametro de salida de la anterior funcion cómo
+     * La funcionalidad AndThen usa el parametro de salida de la anterior funcion como
      * parametro de entrada de la siguiente función.
      */
     @Test
@@ -116,6 +128,25 @@ public class TrySuite {
         assertEquals("Failure - it should transform the number to text",
                 "5 example of text",
                 transform);
+    }
+
+    @Test
+    public void testSuccessTransform2() {
+        Try<Integer> number = Try.of(() -> 5);
+        Try<Integer> transform = number.transform(self -> self);
+
+        assertEquals("Failure - it should transform the number to text",
+                success(5),
+                transform);
+    }
+
+    @Test
+    public void testSuccessWithMap() {
+        Try<String> number = Try.of(() -> "camilo");
+
+        Try<Integer> res = number.map(x -> x.length());
+
+        assertEquals(res, success(6));
     }
 
     /**
@@ -325,11 +356,18 @@ public class TrySuite {
     public void testTryAndRecoverWith() {
         Try<Integer> aTry = Try.of(() -> 2/0).recoverWith(ArithmeticException.class,Try.of(() ->  2));
         Try<Integer> aTry2 = Try.of(() -> 2/0).recoverWith(ArithmeticException.class,Try.of(() ->  2/0));
-        assertEquals("Does not recover of 2/0", Try.of(() -> 2), aTry);
+        assertEquals("Does not recover of 2/0", Try.of(() -> 2), aTry); // recover with, la lambda siempre va a un TryOf
         assertEquals("RecoverWith does not work",
                 Try.failure(new ArithmeticException("/ by zero")).toString() ,
                 aTry2.toString());
     }
+
+    @Test
+    public void testTryAndRecover2(){
+        Try<Integer> aTry = Try.of(() -> 2).recover(ArithmeticException.class, 2); // al tipo de datos al que va.
+    }
+
+
     /**
      *  El Recover retorna el valor a recuperar, pero sin Try, permitiendo que lance un Exception
      *  si, falla
@@ -355,6 +393,99 @@ public class TrySuite {
         };
         Try<Integer> aTry = Try.of(() -> 2).mapTry(checkedFunction1);
         assertEquals("Failed the checkedFuntion", Success(1),aTry);
+    }
+
+
+    //sumar y dividir hacer composicion monadica con flatmap
+
+    private Try<Integer> sumar(Integer a, Integer b){
+        return Try.of(() -> a+b);
+    }
+
+    private Try<Integer> dividir(Integer a, Integer b){
+        return Try.of(()->a/b);
+    }
+
+    private Try<Integer> dividirWithRecoverWith(Integer a, Integer b){
+        return Try.of(()->a/b).recoverWith(ArithmeticException.class, Try.of(()->666));
+    }
+
+    @Test
+    public void testMonadicCompositionWithFlatMap(){
+        Try<Integer> res=
+        sumar(1,2)
+                .flatMap(r0 -> sumar(r0,r0)
+                    .flatMap(r1 -> sumar(r1, -6)
+                        .flatMap(r2 -> dividir(r2, r2))
+                    )
+                );
+
+        assertTrue(res.isFailure());
+
+    }
+
+    @Test
+    public void testMonadicCompositionWithForComprenhension(){
+        Try<Integer> res=
+                For(sumar(1,2), r0->
+                For(sumar(r0,r0), r1->
+                For(sumar(r1, -6), r2 -> dividir(r2,r2)))).toTry();
+        assertTrue(res.isFailure());
+
+    }
+
+    @Test
+    public void testMonadicCompositionWithRecover(){
+        Try<Integer> res=
+                sumar(1,2)
+                        .flatMap(r0 -> sumar(r0,r0)
+                                .flatMap(r1 -> sumar(r1, -6)
+                                        .flatMap(r2 -> dividir(r2, r2).recover(ArithmeticException.class, e->666))
+                                )
+                        );
+
+        Try<Integer> res2=
+                sumar(1,2)
+                        .flatMap(r0 -> sumar(r0,r0)
+                                .flatMap(r1 -> sumar(r1, -6)
+                                        .flatMap(r2 -> dividirWithRecoverWith(r2, r2))
+                                )
+                        );
+
+        assertEquals(success(666), res);
+        assertEquals(success(666), res2);
+
+    }
+
+    @Test
+    public void ejercicioConTrySuccess(){
+        String ruta = "/home/s4n/Desktop/promedio.txt";
+        Try<String> res =
+                AverageCalculatorTry.leerLineasArchivo(ruta).recover(Exception.class, Stream.of("0"))
+                .flatMap(r0 -> AverageCalculatorTry.concatenarArchivo(r0))
+                .flatMap(r0 -> AverageCalculatorTry.calcularPromedio(r0))
+                .flatMap(r1 -> AverageCalculatorTry.verificarSiPaso(r1));
+
+        System.out.println("////////////// respuesta : "+ res);
+
+        assertEquals(success("Paso"), res);
+    }
+
+
+
+    @Test
+    public void ejercicioConTryFailure(){
+        String ruta = "kgalsk";
+
+        Try<String> res = AverageCalculatorTry.leerLineasArchivo(ruta).recover(Exception.class, Stream.of("0"))
+                .flatMap(r0 -> AverageCalculatorTry.concatenarArchivo(r0).recover(Exception.class, "0"))
+                .flatMap(r1 -> AverageCalculatorTry.calcularPromedio(r1).recover(Exception.class,"0"))
+                .flatMap(r2 -> AverageCalculatorTry.verificarSiPaso(r2).recover(Exception.class, "0"));
+
+        System.out.println(res);
+        assertNotEquals(success("No paso"), res);
+
+
     }
 
 }
