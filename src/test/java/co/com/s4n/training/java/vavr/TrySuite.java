@@ -483,7 +483,7 @@ public class TrySuite {
                 .flatMap(r2 -> AverageCalculatorTry.verificarSiPaso(r2).recover(Exception.class, "0"));
 
         System.out.println(res);
-        assertNotEquals(success("No paso"), res);
+        assertEquals(success("No paso"), res);
 
 
     }

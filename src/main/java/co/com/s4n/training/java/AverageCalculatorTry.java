@@ -22,8 +22,7 @@ import static io.vavr.API.None;
 public class AverageCalculatorTry {
 
     public static Try<Stream<String>> leerLineasArchivo(String fn){
-        Try<Stream<String>> streamTry = Try.of(()-> Files.lines((Paths.get(fn))))
-                .recover(Exception.class, Stream.of());
+        Try<Stream<String>> streamTry = Try.of(()-> Files.lines((Paths.get(fn))));
         System.out.println("()()()()) " + streamTry.isEmpty());
         return (!streamTry.isEmpty())? streamTry:Try.failure(new Exception("Archivo no existe"));
 
