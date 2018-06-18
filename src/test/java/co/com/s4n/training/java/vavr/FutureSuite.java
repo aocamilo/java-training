@@ -1,6 +1,7 @@
 package co.com.s4n.training.java.vavr;
 
 import io.vavr.Function1;
+import io.vavr.Lazy;
 import io.vavr.collection.List;
 import io.vavr.collection.Seq;
 import io.vavr.collection.Stream;
@@ -726,5 +727,77 @@ public class FutureSuite {
         myFutureOne.await();
         assertEquals("Failure - Validate Future with Promise",new Integer(15),myFutureOne.get());
         assertFalse("Failure - Validate myFuture is not complete",myFuture.isCompleted());
+    }
+
+    @Test
+    public void testWithTime(){
+        System.out.println("****************** Prueba strict ******************");
+        Future<Integer> f1 = Future.of(() -> {
+            sleep(500);
+            return 1;
+        });
+        Future<Integer> f2 = Future.of(() -> {
+            sleep(800);
+            return 1;
+        });
+        Future<Integer> f3 = Future.of(() -> {
+            sleep(300);
+            return 1;
+        });
+
+        long inicio = System.nanoTime();
+
+        Future<Integer> resultado = f1
+                .flatMap(a -> f2
+                        .flatMap(b -> f3
+                                .flatMap(c -> Future.of(()-> a+b+c))));
+
+        long fin = System.nanoTime();
+
+        long elapsed = (fin - inicio);
+
+        resultado.await();
+
+        System.out.println(elapsed* Math.pow(10, -6));
+        System.out.println(resultado.getOrElse(666));
+
+        System.out.println("****************** Fin Prueba strict ******************");
+
+    }
+
+    @Test
+    public void testWithLazyTime(){
+        System.out.println("****************** Prueba Lazy ******************");
+        Lazy<Future<Integer>> f1 = Lazy.of(() -> Future.of(() -> {
+            sleep(500);
+            return 1;
+        }));
+        Lazy<Future<Integer>> f2 = Lazy.of(() -> Future.of(() -> {
+            sleep(500);
+            return 1;
+        }));
+        Lazy<Future<Integer>> f3 = Lazy.of(() -> Future.of(() -> {
+            sleep(500);
+            return 1;
+        }));
+
+        long inicio = System.nanoTime();
+
+        Future<Integer> res = f1.get()
+                .flatMap(a -> f2.get()
+                        .flatMap(b -> f3.get()
+                                .flatMap(c -> Future.of(() -> a + b + c))));
+
+        res.await();
+
+        long fin = System.nanoTime();
+
+        long elapsed = (fin - inicio);
+
+        System.out.println(elapsed* Math.pow(10, -6));
+        System.out.println(res.getOrElse(666));
+
+        System.out.println("****************** Fin Prueba Lazy ******************");
+
     }
 }
