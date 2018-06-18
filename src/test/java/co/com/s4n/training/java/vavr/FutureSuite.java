@@ -752,11 +752,10 @@ public class FutureSuite {
                         .flatMap(b -> f3
                                 .flatMap(c -> Future.of(()-> a+b+c))));
 
+        resultado.await();
         long fin = System.nanoTime();
 
         long elapsed = (fin - inicio);
-
-        resultado.await();
 
         System.out.println(elapsed* Math.pow(10, -6));
         System.out.println(resultado.getOrElse(666));
@@ -783,10 +782,11 @@ public class FutureSuite {
 
         long inicio = System.nanoTime();
 
-        Future<Integer> res = f1.get()
-                .flatMap(a -> f2.get()
-                        .flatMap(b -> f3.get()
-                                .flatMap(c -> Future.of(() -> a + b + c))));
+        Future<Integer> res =
+                f1.get()
+                        .flatMap(a -> f2.get()
+                                .flatMap(b -> f3.get()
+                                        .flatMap(c -> Future.of(() -> a + b + c))));
 
         res.await();
 
