@@ -773,11 +773,11 @@ public class FutureSuite {
             return 1;
         }));
         Lazy<Future<Integer>> f2 = Lazy.of(() -> Future.of(() -> {
-            sleep(500);
+            sleep(800);
             return 1;
         }));
         Lazy<Future<Integer>> f3 = Lazy.of(() -> Future.of(() -> {
-            sleep(500);
+            sleep(300);
             return 1;
         }));
 
