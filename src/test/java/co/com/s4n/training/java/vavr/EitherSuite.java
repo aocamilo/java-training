@@ -1,5 +1,6 @@
 package co.com.s4n.training.java.vavr;
 
+import co.com.s4n.training.java.biPeek;
 import io.vavr.Function1;
 import io.vavr.control.Either;
 import org.junit.Test;
@@ -13,6 +14,9 @@ import java.io.Serializable;
 import static org.junit.Assert.assertArrayEquals;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
+
+import javax.swing.text.ElementIterator;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static io.vavr.API.*;
@@ -30,9 +34,13 @@ public class EitherSuite {
         Either<Integer,String> myEitherR = Either.right("String");
         Either<Integer,String> myEitherL = Either.left(14);
         assertTrue("Valide swap before in Either Right", myEitherR.isRight());
+        assertFalse(myEitherR.isLeft());
         assertTrue("Valide swap after in Either Right", myEitherR.swap().isLeft());
+        assertFalse(myEitherR.swap().isRight());
         assertTrue("Valide swap before in Either Left", myEitherL.isLeft());
+        assertFalse(myEitherL.isRight());
         assertTrue("Valide swap after in Either Right", myEitherL.swap().isRight());
+        assertFalse(myEitherL.swap().isLeft());
     }
 
     /**
@@ -51,6 +59,18 @@ public class EitherSuite {
 
         //El Either para operar el lado izquierdo se debe usar un mapLeft.
         assertEquals("Failure - Left Projection", Left(10), e2.mapLeft(it -> it + 5));
+    }
+
+    @Test
+    public void testProjectionMap(){
+        Either<Integer,Integer> e1 = Either.right(5);
+        Either<Integer,Integer> e2 = Either.left(5);
+
+        //El Either por defecto cuando se usa el map opera con el lado derecho.
+        assertEquals("Failure - Right projection", Right(10), e1.map(it -> it + 5));
+
+        //El Either para operar el lado izquierdo se debe usar un mapLeft. Si no se usa el mapLeft, no se aplica la lambda.
+        assertEquals("Failure - Left Projection", Left(5), e2.map(it -> it + 5));
     }
 
     /**
@@ -94,6 +114,35 @@ public class EitherSuite {
 
     }
 
+    //programa ejemplo con either
+
+    public Either<Integer, Integer> sum(int a, int b){
+        return Either.right(a + b);
+    }
+
+    public Either<Integer, Integer> divide(int a, int b){
+        Try<Integer> res = Try.of(()-> a/b);
+        return (res.isSuccess())? Either.right(a/b): Either.left(0);
+    }
+
+    @Test
+    public void myTestWithEither(){
+        Either<Integer, Integer> res1 = sum(2, 2)
+                .flatMap(r1 -> sum(r1, 2)
+                        .flatMap(r2 -> divide(r2, 0)
+                                .flatMap(r3 -> sum(r3, 2))));
+
+        Either<Integer, Integer> res2 = sum(2, 2)
+                .flatMap(r1 -> sum(r1, 2)
+                        .flatMap(r2 -> sum(r2, 2)
+                                .flatMap(r3 -> divide(r3, 2))));
+
+        assertEquals(res1, Either.left(0));
+        System.out.println("->> res1: "+ res1 );
+        assertEquals(res2, Either.right(4));
+        System.out.println("->> res2: "+ res2);
+    }
+
     /**
      * Un Either puede ser filtrado, y en el predicado se pone la condicion
      */
@@ -105,6 +154,16 @@ public class EitherSuite {
         assertEquals("value is even",
                 None(),
                 value.filter(it -> it % 2 == 0));
+    }
+
+    @Test
+    public void testEitherFilterSuccess() {
+
+        Either<String,Integer> value = Either.right(8);
+
+        assertEquals(
+                Some(Either.right(8)),
+                value.filter(it -> it / 2 == 4));
     }
 
     /**
@@ -119,6 +178,8 @@ public class EitherSuite {
     /**
      * La funcion bimap me permite realizar map a los Either en su derecha o izquierda
      * esto dependera de en cual lado tiene informacion
+     * si es derecha aplica derecha
+     * si es izquiera aplica izquierda
      */
     @Test
     public void testEitherBiMap() {
@@ -133,6 +194,31 @@ public class EitherSuite {
 
         assertEquals("Failure map in right", Either.right(20),biMap.apply(value));
         assertEquals("Failure map in left", Either.left("this the left"),biMap.apply(value2));
+    }
+
+
+
+
+    @Test
+    public void biPeekTest(){
+        Either<String, String> left = Either.left("This the left");
+        Either<String, String> right = Either.right("This the right");
+        final String[] s = {""};
+        co.com.s4n.training.java.biPeek bp = new biPeek();
+        Consumer<String> c1 = element -> {
+            s[0] += element;
+        };
+
+        Consumer<String> c2 = element -> {
+            s[0] += element;
+        };
+
+        bp.biPeek2(left, c1, c2);
+        assertEquals(s[0], "This the left");
+        s[0]= "";
+        bp.biPeek2(right, c1, c2);
+        assertEquals(s[0], "This the right");
+
     }
 
     /**
@@ -157,6 +243,8 @@ public class EitherSuite {
 
     /**
      * Se valida la funcion peek y peekleft segun la proyeccion del Either ya sea right o left
+     * peek solo ejecuta si es right, en caso de que se quiera usar peek sobre un left para que se ejecute
+     * se debe usar peekLeft
      */
     @Test
     public void peekToEither() {
@@ -183,6 +271,10 @@ public class EitherSuite {
         myEitherL.peekLeft(myConsumer);
         assertEquals("Validete Either with peek","foo", valor[0]);
     }
+
+    //either, lambda y si es izq le hace peekleft y si es derecha el peek
+
+
 
     /**
      * Uso de pattern matching para capturar un Either.Left
