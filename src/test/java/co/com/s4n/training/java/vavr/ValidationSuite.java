@@ -55,7 +55,7 @@ public class ValidationSuite
             this.age = age;
         }}
 
-
+    //invalido el primero parametrizado, el segundo es el valido
     private Validation<String, String> validateAge(Integer age) {
         if(age<14)return Validation.invalid("Age must be at least " + 14);
         else return Validation.valid(age.toString());
@@ -111,7 +111,7 @@ public class ValidationSuite
                 .combine(validateAge(13),
                         validateAmount(15000))
                 .ap(MyClass::new);
-
+        //primer lambda si es invalido y segunda lambda si es valido, se accede con un fold.
         Integer fold = res.fold(s -> 1, c -> 2);
 
         assertTrue("ap should be invalid",res.isInvalid());
@@ -136,7 +136,6 @@ public class ValidationSuite
                         },
                         
                         c -> 2);
-
     }
 
     /**
@@ -148,7 +147,7 @@ public class ValidationSuite
         Validation<Error,String> valid = Validation.valid("Lets");
         Validation<Error,String> valid2 = Validation.valid("Go!");
         Validation<Error, String> invalid = Validation.invalid(new Error("Stop!"));
-
+        // ap solo se ejecuta si todos son validos.
         Validation<Seq<Error>, String> finalValidation = Validation.combine(valid, invalid , valid2).ap((v1,v2,v3) -> v1 + v2 + v3);
 
         assertEquals("Failure - Combine with an invalid Validation didn't return the error",
@@ -156,6 +155,29 @@ public class ValidationSuite
                 finalValidation.getError().get(0).getMessage());
 
         // Cambialo para que verifiques con fold! :D
+    }
+
+    @Test
+    public void testCombineWithAnInvalidAndFold(){
+
+        Validation<Error,String> valid = Validation.valid("Lets");
+        Validation<Error,String> valid2 = Validation.valid("Go!");
+        Validation<Error, String> invalid = Validation.invalid(new Error("Stop!"));
+        // ap solo se ejecuta si todos son validos.
+        Validation<Seq<Error>, String> finalValidation = Validation.combine(valid, invalid , valid2).ap((v1,v2,v3) -> v1 + v2 + v3);
+
+        assertEquals("Failure - Combine with an invalid Validation didn't return the error",
+                "Stop!",
+                finalValidation.getError().get(0).getMessage());
+
+        Integer resultado = finalValidation.fold(s -> {
+            assertTrue(s.size() == 1);
+            System.out.println("Error obtenido: " + finalValidation.getError().get(0).getMessage());
+            return s.size();
+
+        }, c -> 2);
+
+        assertEquals(new Integer(1), resultado);
     }
 
     /**
@@ -181,6 +203,7 @@ public class ValidationSuite
      * Un validator retorna un resultado exitoso si el valor
      * cumple con los predicados dados
      */
+
     @Test
     public void testValidValidator(){
         final String EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@(.+)\\.(.+)$";
@@ -235,6 +258,27 @@ public class ValidationSuite
                 result8.ap(TestValidation::new).toString());
     }
 
+    @Test
+    public void testBuilder7() {
+
+        Validation<String, String> v1 = Validation.valid("John Doe");
+        Validation<String, Integer> v2 = Validation.valid(39);
+        Validation<String, Option<String>> v3 = Validation.valid(Option.of("address"));
+
+        Validation<String, String> v4 = Validation.valid("111-111-1111");
+        Validation<String, String> v5 = Validation.valid("alt1");
+        Validation<String, String> v6 = Validation.valid("alt2");
+        Validation<String, String> v7 = Validation.valid("alt3");
+        Validation<String, String> v8 = Validation.valid("alt4");
+
+        Validation.Builder7<String, String, Integer, Option<String>, String, String, String, String> result7 =
+                Validation.combine(v1,v2,v3,v4,v5,v6,v7);
+
+        /*assertEquals("Failure - ",
+                "Valid(John Doe,39,address,111-111-1111,alt1,alt2,alt3,alt4)",
+                result7.ap(TestValidation::new).toString());*/
+    }
+
     /**
      *  Me permite recorrer una coleccion de Validation y operarlos
      */
@@ -255,6 +299,54 @@ public class ValidationSuite
         validation.forEach(consumer);
         assertEquals("Failure- Was not operated",
                 Arrays.asList("Operacion 0","Operacion 1","Operacion 2"),msg);
+    }
+
+    class Validador{
+        int valido= 0;
+        int invalido = 0;
+
+        public Validador(){
+        }
+
+        public Validation<String,String> validador(Validation<String, String> a){
+            if (a.isValid()){
+                valido++;
+            }else{
+                invalido++;
+            }
+            return a;
+        }
+
+        public int getValidos(){
+            return valido;
+        }
+
+        public int getInvalidos(){
+            return invalido;
+        }
+    }
+
+    /* si el combine pasa por todos los elementos, deben haber 2 invalidos y 3 validos */
+
+    @Test
+    public void testValidator5Validations() {
+
+        Validation<String, String> v1 = Validation.valid("Hola");
+        Validation<String, String> v2 = Validation.invalid("Me llamo");
+        Validation<String, String> v3 = Validation.valid("Camilo");
+        Validation<String, String> v4 = Validation.invalid("Arango");
+        Validation<String, String> v5 = Validation.valid("!");
+
+        Validador v = new Validador();
+
+        Validation.combine(v.validador(v1), v.validador(v2), v.validador(v3), v.validador(v4), v.validador(v5))
+                .ap((a,b,c,d,e) -> a+b+c+d+e);
+
+        assertEquals(2, v.getInvalidos());
+        assertEquals(3, v.getValidos());
+
+        /* el combine pasa por todos los elementos, evaluadolos 1 a 1 */
+
     }
 
     /**
