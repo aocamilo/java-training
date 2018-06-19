@@ -4,14 +4,15 @@ import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import io.vavr.collection.List;
 import io.vavr.control.Option;
-import org.junit.Test;
 
 import java.util.NoSuchElementException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static io.vavr.collection.Iterator.empty;
-import static org.junit.Assert.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.junit.platform.runner.JUnitPlatform;
+import org.junit.runner.RunWith;
 
 
 /**
@@ -29,16 +30,20 @@ import static org.junit.Assert.*;
 *
 *
 * */
-
+@RunWith(JUnitPlatform.class)
 public class ListSuite {
 
     /**
      * Lo que sucede cuando se intenta crear un lista de null
      */
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testListOfNull() {
-        List<String> list1 = List.of(null);
-        list1.get();
+
+        assertThrows(NullPointerException.class, ()->{
+            List<String> list1 = List.of(null);
+            list1.get();
+        });
+
     }
 
     /**
@@ -51,7 +56,7 @@ public class ListSuite {
     @Test
     public void testZipOnEmptyList() {
         List<String> list = List.of();
-        assertTrue("Failure - List should be empty",list.isEmpty());
+        assertTrue(list.isEmpty());
         List<Tuple2<String, Object>> zip = list.zip(empty());
 
         System.out.println(zip.size());
@@ -98,11 +103,14 @@ public class ListSuite {
     // No hay elementos, tira una excepción de NoSuchElementException, por esto es peligroso acceder a una lista con Head
     // es mas seguro acceder con un HeadOption
 
-    @Test(expected = NoSuchElementException.class)
+    @Test
     public void EmptyListTestHead(){
         List<Integer> list1 = List.of();
-        Integer head = list1.head();
-        assertEquals(head, null);
+        assertThrows(NoSuchElementException.class, ()->{
+            Integer head = list1.head();
+            assertEquals(head, null);
+        });
+
     }
 
     // para comparar option null = Option.none, headOption devuelve un Option
@@ -191,7 +199,7 @@ public class ListSuite {
     public void testZipWhenEmpty() {
         List<String> list = List.of("I", "Mario's", "Please", "me");
         List<Tuple2<String, Integer>> zipped = list.zip(empty());
-        assertTrue("Failure - The list should be empty",zipped.isEmpty());
+        assertTrue(zipped.isEmpty());
     }
 
     /**
@@ -207,7 +215,7 @@ public class ListSuite {
         List<Tuple2<String, String>> zipped2 = list1.zip(list2);
         List<Tuple2<String, String>> expected2 = List.of(Tuple.of("I", "deleted"), Tuple.of("Mario's", "test"),
                 Tuple.of("Please", "forgive"), Tuple.of("me", "!"));
-        assertEquals("Failure - The list wasn't match correctly.",expected2,zipped2);
+        assertEquals(expected2,zipped2);
     }
 
     /**
@@ -217,7 +225,7 @@ public class ListSuite {
     public void testZipWithIndex() {
         List<String> list = List.of("A", "B", "C");
         List<Tuple2<String, Integer>> expected = List.of(Tuple.of("A", 0), Tuple.of("B", 1), Tuple.of("C", 2));
-        assertEquals("Failure - The list doesn't have the correct index.",expected,list.zipWithIndex());
+        assertEquals(expected,list.zipWithIndex());
     }
 
     /**
@@ -227,27 +235,31 @@ public class ListSuite {
     public void testListStack() {
         List<String> list = List.of("B", "A");
 
-        assertEquals("Failure pop does not drop the first element of the his list",
+        assertEquals(
                 List.of("A"), list.pop());
 
-        assertEquals("Failure push does not add the element as the first in his list",
+        assertEquals(
                 List.of("D", "C", "B", "A"), list.push("C", "D"));
 
-        assertEquals("Failure push does not add the element as the first in his list",
+        assertEquals(
                 List.of("C", "B", "A"), list.push("C"));
 
-        assertEquals("Failure it's a lie first in last out",
+        assertEquals(
                 List.of("B", "A"), list.push("C").pop());
 
-        assertEquals("Failure doesn't return the correct tuple",
+        assertEquals(
                 Tuple.of("B", List.of("A")), list.pop2());
     }
 
-    @Test(expected = NoSuchElementException.class)
+    @Test
     public void popWithEmpty(){
         List<Integer> l1 = List.of();
-        List<Integer> l2 = l1.pop();
-        assertEquals(l2, empty());
+
+        assertThrows(NoSuchElementException.class, ()->{
+            List<Integer> l2 = l1.pop();
+            assertEquals(l2, empty());
+        });
+
     }
 
     @Test
@@ -274,10 +286,12 @@ public class ListSuite {
 
     }
 
-    @Test (expected = NoSuchElementException.class)
+    @Test
     public void pop2OnEmptyList(){
         List<Integer> l1 = List.of();
-        Tuple2<Integer, List<Integer>> r = l1.pop2();
+        assertThrows(NoSuchElementException.class, ()-> {
+            Tuple2<Integer, List<Integer>> r = l1.pop2();
+        });
     }
 
 
@@ -295,8 +309,8 @@ public class ListSuite {
         list = list.push("c");
         list = list.push("d");
         list = list.push("e");
-        assertEquals("The list did not behave as a stack", List.of("d", "c", "b", "a"), list.pop());
-        assertEquals("The list did not behave as a stack", "e", list.peek()); // peek is head as pop is tail *******
+        assertEquals( List.of("d", "c", "b", "a"), list.pop());
+        assertEquals("e", list.peek()); // peek is head as pop is tail *******
     }
 
     /**
@@ -307,8 +321,8 @@ public class ListSuite {
     public void testSpan() {
         List<String> list = List.of("a", "b", "c");
         Tuple2<List<String>, List<String>> tuple = list.span(s -> s.equals("a"));
-        assertEquals("The first element of the tuple did not match", List.of("a"), tuple._1);
-        assertEquals("The second element of the tuple did not match", List.of("b", "c"), tuple._2);
+        assertEquals(List.of("a"), tuple._1);
+        assertEquals(List.of("b", "c"), tuple._2);
     }
 
 
@@ -321,10 +335,10 @@ public class ListSuite {
         List<Integer> myListOne = List.ofAll(2, 4, 3);
         List<Integer> myListRes = myList.takeWhile(j -> j < 8); // guarda en la lista hasta que encuentra un valor mayor a 8 (4,6)
         List<Integer> myListResOne = myListOne.takeWhile(j -> j > 2); // guarda en la lista hasta que encuentra un valor mayor a 2 (vacio)
-        assertTrue("List with values less than eight", myListRes.nonEmpty());
-        assertEquals("List with length of two", 2, myListRes.length());
-        assertEquals("List with last value six", new Integer(6), myListRes.last());
-        assertTrue("List with values greater than two", myListResOne.isEmpty());
+        assertTrue( myListRes.nonEmpty());
+        assertEquals( 2, myListRes.length());
+        assertEquals( new Integer(6), myListRes.last());
+        assertTrue( myListResOne.isEmpty());
     }
 
     /**
@@ -339,7 +353,7 @@ public class ListSuite {
                 "???",
                 "???",
                 "???");
-        assertEquals("Failure - the window is incorrect",List.of("First","window","!"),list.sliding(3).head());
+        assertEquals(List.of("First","window","!"),list.sliding(3).head());
     }
 
     /**
@@ -355,11 +369,11 @@ public class ListSuite {
                 "window",
                 "!");
         List<List<String>> windows = list.sliding(3,3).toList(); // Iterator -> List
-        assertEquals("Failure - the window is incorrect",
+        assertEquals(
                 List.of("Second","window","!"),
                 windows.get(1));
         List<List<String>> windows2 = list.sliding(3,1).toList(); // Iterator -> List
-        assertEquals("Failure - the window is incorrect",
+        assertEquals(
                 List.of("window","!","Second"),
                 windows2.get(1));
     }

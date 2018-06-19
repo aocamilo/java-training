@@ -14,8 +14,9 @@ lazy val root = (project in file(".")).
     name := "s4n-java-training",
     libraryDependencies ++= Seq(
       "io.vavr" % "vavr" % "0.9.2",
-      "junit" % "junit" % "4.12" % "test",
-      "com.novocode" % "junit-interface" % "0.11" % "test",
-      "org.projectlombok" % "lombok" % "1.16.16"
+      "org.projectlombok" % "lombok" % "1.16.16",
+      "org.junit.platform" % "junit-platform-runner" % "1.0.0-M3" % "test",
+      "org.junit.jupiter" % "junit-jupiter-engine" % "5.0.0-M3" % "test",
+      "com.novocode" % "junit-interface" % "0.11" % "test"
     )
   )
